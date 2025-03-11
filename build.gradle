@@ -24,13 +24,13 @@ test {
 dependencies {
     implementation (group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2')
     implementation (group: 'org.jetbrains', name: 'annotations', version: '26.0.2')
-    shadow (group: 'com.google.code.gson', name: 'gson', version: '2.11.0')
+    shadow (group: 'com.google.code.gson', name: 'gson', version: '2.12.1')
 
     testRuntimeOnly (group: 'org.junit.vintage', name: 'junit-vintage-engine', version: '5.11.4')
     testRuntimeOnly (group: 'org.junit.jupiter', name:'junit-jupiter-engine', version: '5.11.4')
 
     testImplementation (group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.11.4')
-    testImplementation (group: 'com.google.code.gson', name: 'gson', version: '2.11.0')
+    testImplementation (group: 'com.google.code.gson', name: 'gson', version: '2.12.1')
     testImplementation (group: 'junit', name: 'junit', version: '4.13.2')
 }
 
