@@ -71,9 +71,10 @@ public class Parser {
      *                    own subpackages.
      * @param programArgs any other program arguments (typically from the command line)
      * @param standalone whether the parser tries to load addons (standalone) or not (library)
+     * @param classLoader the ClassLoader to use to load the classes. If null, the parser's ClassLoader will be used.
      */
-    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone) {
-        init(mainPackages, subPackages, programArgs, standalone, null);
+    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable ClassLoader classLoader) {
+        init(mainPackages, subPackages, programArgs, standalone, null, classLoader);
     }
 
     /**
@@ -86,8 +87,9 @@ public class Parser {
      * @param programArgs any other program arguments (typically from the command line)
      * @param standalone whether the parser tries to load addons (standalone) or not (library)
      * @param parserPath the main path to the parser, will be used to get the addons folder. If null, the path will be inferred from the parser's location.
+     * @param classLoader the ClassLoader to use to load the classes. If null, the parser's ClassLoader will be used.
      */
-    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable Path parserPath) {
+    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable Path parserPath, @Nullable ClassLoader classLoader) {
         Skript skript = new Skript(programArgs);
         registration = new SkriptRegistration(skript);
         DefaultRegistration.register();
@@ -101,12 +103,17 @@ public class Parser {
         ).toArray(String[]::new);
 
         try {
+            if (classLoader == null) {
+                classLoader = Parser.class.getClassLoader();
+            }
+
             // Load all classes in the specified packages
+            ClassLoader finalClassLoader = classLoader;
             new Reflections(allPackages, Scanners.SubTypes.filterResultsBy(s -> true))
                     .getSubTypesOf(Object.class)
                     .forEach(clazz -> {
                         try {
-                            Class.forName(clazz.getName(), true, Parser.class.getClassLoader());
+                            Class.forName(clazz.getName(), true, finalClassLoader);
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
                         }
