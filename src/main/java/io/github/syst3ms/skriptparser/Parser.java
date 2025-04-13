@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 
 public class Parser {
 
@@ -90,13 +89,20 @@ public class Parser {
         registration = new SkriptRegistration(skript);
         DefaultRegistration.register();
 
-        String[] allPackages = Stream.concat(
-                Stream.of("expressions", "effects", "event", "lang", "sections", "structures", "tags")
-                        .map(subPackage -> "io.github.syst3ms.skriptparser." + subPackage),
-                Stream.of(subPackages)
-                        .flatMap(subPackage -> Stream.of(mainPackages)
-                                .map(main -> main + "." + subPackage))
-        ).toArray(String[]::new);
+        List<String> allPackages = new ArrayList<>();
+        
+        // Add default subpackages
+        List<String> defaultSubPackages = Arrays.asList("expressions", "effects", "event", "lang", "sections", "structures", "tags");
+        for (String subPackage : defaultSubPackages) {
+            allPackages.add("io.github.syst3ms.skriptparser." + subPackage);
+        }
+        
+        // Add user-defined subpackages
+        for (String mainPackage : mainPackages) {
+            for (String subPackage : subPackages) {
+                allPackages.add(mainPackage + "." + subPackage);
+            }
+        }
 
         try {
             // Load all classes in the specified packages
