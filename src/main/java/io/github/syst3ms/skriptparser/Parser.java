@@ -7,7 +7,9 @@ import io.github.syst3ms.skriptparser.registration.DefaultRegistration;
 import io.github.syst3ms.skriptparser.registration.SkriptAddon;
 import io.github.syst3ms.skriptparser.registration.SkriptRegistration;
 import io.github.syst3ms.skriptparser.util.ConsoleColors;
-import io.github.syst3ms.skriptparser.util.FileUtils;
+import org.jetbrains.annotations.Nullable;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -23,12 +25,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 public class Parser {
-    public static final String CONSOLE_FORMAT = "[%tT] %s: %s%n";
-    private static SkriptRegistration registration;
 
+    public static final String CONSOLE_FORMAT = "[%tT] %s: %s%n";
+
+    private static SkriptRegistration registration;
     private static List<LogEntry> logs;
 
     public static void main(String[] args) {
@@ -69,49 +71,72 @@ public class Parser {
      * @param standalone whether the parser tries to load addons (standalone) or not (library)
      */
     public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone) {
+        init(mainPackages, subPackages, programArgs, standalone, null);
+    }
+
+    /**
+     * Starts the parser.
+     * @param mainPackages packages inside which all subpackages containing classes to load may be present. Doesn't need
+     *                     to contain Skript's own main packages.
+     * @param subPackages the subpackages inside which classes to load may be present. Doesn't need to contain Skript's
+     *                    own subpackages.
+     * @param programArgs any other program arguments (typically from the command line)
+     * @param standalone whether the parser tries to load addons (standalone) or not (library)
+     * @param parserPath the main path to the parser, will be used to get the addons folder. If null, the path will be inferred from the parser's location.
+     */
+    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable Path parserPath) {
         Skript skript = new Skript(programArgs);
         registration = new SkriptRegistration(skript);
         DefaultRegistration.register();
-        // Make sure Skript loads properly no matter what
+
+        // Ensure Skript loads first
         mainPackages = Arrays.copyOf(mainPackages, mainPackages.length + 1);
         mainPackages[mainPackages.length - 1] = "io.github.syst3ms.skriptparser";
+
+        // Combine main and sub-packages
         List<String> sub = new ArrayList<>();
         sub.addAll(Arrays.asList(subPackages));
         sub.addAll(Arrays.asList("expressions", "effects", "event", "lang", "sections", "tags"));
         subPackages = sub.toArray(new String[0]);
-        try {
-            for (String mainPackage : mainPackages) {
-                FileUtils.loadClasses(FileUtils.getJarFile(Parser.class), mainPackage, subPackages);
+        List<String> allPackages = new ArrayList<>(List.of(mainPackages));
+        for (String subPackage : subPackages) {
+            for (String main : mainPackages) {
+                allPackages.add(main + "." + subPackage);
             }
+        }
+
+        try {
+            // Load all classes in the specified packages
+            new Reflections(allPackages.toArray(new String[0]), Scanners.SubTypes.filterResultsBy(s -> true))
+                    .getSubTypesOf(Object.class)
+                    .forEach(clazz -> {
+                        try {
+                            Class.forName(clazz.getName(), true, Parser.class.getClassLoader());
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+            // Load addons if standalone mode is enabled
             if (standalone) {
-                Path parserPath = Paths.get(Parser.class
-                    .getProtectionDomain()
-                    .getCodeSource()
-                    .getLocation()
-                    .toURI()
-                );
-                Path addonFolderPath = Paths.get(parserPath.getParent().toString(), "addons");
+                if (parserPath == null) {
+                    parserPath = Paths.get(Parser.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+                }
+                Path addonFolderPath = parserPath.getParent().resolve("addons");
                 if (Files.isDirectory(addonFolderPath)) {
                     Files.walk(addonFolderPath)
                         .filter(Files::isRegularFile)
-                        .filter((filePath) -> filePath.toString().endsWith(".jar"))
-                        .forEach((Path addonPath) -> {
-                            try {
-                                URLClassLoader child = new URLClassLoader(
-                                    new URL[]{addonPath.toUri().toURL()},
-                                    Parser.class.getClassLoader()
-                                );
-                                JarFile jar = new JarFile(addonPath.toString());
-                                Manifest manifest = jar.getManifest();
-                                String main = manifest.getMainAttributes().getValue("Main-Class");
-                                if (main != null) {
-                                    Class<?> mainClass = Class.forName(main, true, child);
+                        .filter(filePath -> filePath.toString().endsWith(".jar"))
+                        .forEach(addonPath -> {
+                            try (JarFile jar = new JarFile(addonPath.toString())) {
+                                URLClassLoader child = new URLClassLoader(new URL[]{addonPath.toUri().toURL()}, Parser.class.getClassLoader());
+                                String mainClassName = jar.getManifest().getMainAttributes().getValue("Main-Class");
+                                if (mainClassName != null) {
                                     try {
+                                        Class<?> mainClass = Class.forName(mainClassName, true, child);
                                         Method init = mainClass.getDeclaredMethod("initAddon");
                                         init.invoke(null);
                                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-                                    } finally {
-                                        jar.close();
                                     }
                                 }
                             } catch (IOException | ClassNotFoundException e) {
@@ -125,6 +150,8 @@ public class Parser {
             System.err.println("Error while loading classes:");
             e.printStackTrace();
         }
+
+        // Log registration results
         Calendar time = Calendar.getInstance();
         logs = registration.register();
         if (!logs.isEmpty()) {
