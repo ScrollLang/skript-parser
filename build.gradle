@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -65,9 +64,11 @@ java {
 
 jar {
     manifest {
-        attributes("Main-Class": mainClassName,
+        attributes(
+            "Main-Class": mainClassName,
             "Implementation-Title": "skript-parser",
-            "Implementation-Version": project.property("version"))
+            "Implementation-Version": project.property("version")
+        )
     }
 }
 
