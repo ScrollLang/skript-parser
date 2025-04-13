@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
  * Utility functions for file parsing
  */
 public class FileUtils {
+
     public static final Pattern LEADING_WHITESPACE_PATTERN = Pattern.compile("(\\s+)\\S.*");
     public static final String MULTILINE_SYNTAX_TOKEN = "\\";
     private static final String OS_SEPARATOR = FileSystems.getDefault().getSeparator();
@@ -134,7 +135,9 @@ public class FileUtils {
      * @param rootPackage a root package
      * @param subPackages a list of all subpackages of the root package, in which classes will be loaded
      * @throws IOException if an I/O error has occurred
+     * @deprecated use the Reflections library for classpath scanning and loading instead
      */
+    @Deprecated
     public static void loadClasses(File jarFile, String rootPackage, String... subPackages) throws IOException {
         if (jarFile.isDirectory())
             throw new IllegalArgumentException("The provided file is actually a directory!");
@@ -174,7 +177,9 @@ public class FileUtils {
      * @param rootPackage a root package
      * @param subPackages a list of all subpackages of the root package, in which classes will be leadied
      * @throws IOException if an I/O error has occurred
+     * @deprecated use the Reflections library for classpath scanning and loading instead
      */
+    @Deprecated
     public static void loadClasses(Path directory, String rootPackage, String... subPackages) throws IOException {
         if (!directory.toFile().isDirectory())
             throw new IllegalArgumentException("The provided file isn't a directory!");
@@ -209,8 +214,11 @@ public class FileUtils {
      *
      * @param cla the class
      * @return the JAR file containing the class
+     * @deprecated not all projects that uses skript-parser are JAR files, so this method may not work as expected
      */
+    @Deprecated
     public static File getJarFile(Class<?> cla) throws URISyntaxException {
         return new File(cla.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
+
 }

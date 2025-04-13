@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.0.0-beta12'
     id 'maven-publish'
     id 'application'
     id 'java'
@@ -23,6 +23,9 @@ test {
 dependencies {
     implementation (group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2')
     implementation (group: 'org.jetbrains', name: 'annotations', version: '26.0.2')
+
+    shadow (group: 'org.reflections', name: 'reflections', version: '0.10.2')
+    shadow (group: 'org.javassist', name: 'javassist', version: '3.30.2-GA')
     shadow (group: 'com.google.code.gson', name: 'gson', version: '2.13.0')
 
     testRuntimeOnly (group: 'org.junit.vintage', name: 'junit-vintage-engine', version: '5.11.4')
