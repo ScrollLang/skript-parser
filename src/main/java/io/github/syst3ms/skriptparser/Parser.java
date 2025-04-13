@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 public class Parser {
 
@@ -89,25 +90,17 @@ public class Parser {
         registration = new SkriptRegistration(skript);
         DefaultRegistration.register();
 
-        // Ensure Skript loads first
-        mainPackages = Arrays.copyOf(mainPackages, mainPackages.length + 1);
-        mainPackages[mainPackages.length - 1] = "io.github.syst3ms.skriptparser";
-
-        // Combine main and sub-packages
-        List<String> sub = new ArrayList<>();
-        sub.addAll(Arrays.asList(subPackages));
-        sub.addAll(Arrays.asList("expressions", "effects", "event", "lang", "sections", "tags"));
-        subPackages = sub.toArray(new String[0]);
-        List<String> allPackages = new ArrayList<>(List.of(mainPackages));
-        for (String subPackage : subPackages) {
-            for (String main : mainPackages) {
-                allPackages.add(main + "." + subPackage);
-            }
-        }
+        String[] allPackages = Stream.concat(
+                Stream.of("expressions", "effects", "event", "lang", "sections", "structures", "tags")
+                        .map(subPackage -> "io.github.syst3ms.skriptparser." + subPackage),
+                Stream.of(subPackages)
+                        .flatMap(subPackage -> Stream.of(mainPackages)
+                                .map(main -> main + "." + subPackage))
+        ).toArray(String[]::new);
 
         try {
             // Load all classes in the specified packages
-            new Reflections(allPackages.toArray(new String[0]), Scanners.SubTypes.filterResultsBy(s -> true))
+            new Reflections(allPackages, Scanners.SubTypes.filterResultsBy(s -> true))
                     .getSubTypesOf(Object.class)
                     .forEach(clazz -> {
                         try {
