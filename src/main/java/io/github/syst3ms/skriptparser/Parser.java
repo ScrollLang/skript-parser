@@ -10,6 +10,7 @@ import io.github.syst3ms.skriptparser.util.ConsoleColors;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -25,7 +26,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 
 public class Parser {
 
@@ -58,28 +58,25 @@ public class Parser {
             scriptName = args[j];
             programArgs = Arrays.copyOfRange(args, j + 1, args.length);
         }
-        init(new String[0], new String[0], programArgs, true, null);
+        init(new String[0], new String[0], programArgs, true, null, null);
         run(scriptName, debug, tipsEnabled);
     }
 
     /**
      * Starts the parser.
-     * 
      * @param mainPackages packages inside which all subpackages containing classes to load may be present. Doesn't need
      *                     to contain Skript's own main packages.
      * @param subPackages the subpackages inside which classes to load may be present. Doesn't need to contain Skript's
      *                    own subpackages.
      * @param programArgs any other program arguments (typically from the command line)
      * @param standalone whether the parser tries to load addons (standalone) or not (library)
-     * @param classLoader the ClassLoader to use to load the classes. If null, the parser's ClassLoader will be used.
      */
-    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable ClassLoader classLoader) {
-        init(mainPackages, subPackages, programArgs, standalone, null, classLoader);
+    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone) {
+        init(mainPackages, subPackages, programArgs, standalone, null, null);
     }
 
     /**
      * Starts the parser.
-     *
      * @param mainPackages packages inside which all subpackages containing classes to load may be present. Doesn't need
      *                     to contain Skript's own main packages.
      * @param subPackages the subpackages inside which classes to load may be present. Doesn't need to contain Skript's
@@ -87,20 +84,30 @@ public class Parser {
      * @param programArgs any other program arguments (typically from the command line)
      * @param standalone whether the parser tries to load addons (standalone) or not (library)
      * @param parserPath the main path to the parser, will be used to get the addons folder. If null, the path will be inferred from the parser's location.
-     * @param classLoader the ClassLoader to use to load the classes. If null, the parser's ClassLoader will be used.
      */
-    public static void init(String[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable Path parserPath, @Nullable ClassLoader classLoader) {
+    public static void init(Object[] mainPackages, String[] subPackages, String[] programArgs, boolean standalone, @Nullable Path parserPath, @Nullable ClassLoader classLoader) {
         Skript skript = new Skript(programArgs);
         registration = new SkriptRegistration(skript);
         DefaultRegistration.register();
 
-        String[] allPackages = Stream.concat(
-            Stream.of("expressions", "effects", "event", "lang", "sections", "structures", "tags")
-                .map(subPackage -> "io.github.syst3ms.skriptparser." + subPackage),
-            Stream.of(subPackages)
-                .flatMap(subPackage -> Stream.of(mainPackages)
-                    .map(main -> main + "." + subPackage))
-        ).toArray(String[]::new);
+        List<Object> allPackages = new ArrayList<>();
+
+        // Add default subpackages
+        List<String> defaultSubPackages = Arrays.asList("expressions", "effects", "event", "lang", "sections", "structures", "tags");
+        for (String subPackage : defaultSubPackages) {
+            allPackages.add("io.github.syst3ms.skriptparser." + subPackage);
+        }
+
+        // Add user-defined subpackages
+        for (Object mainPackage : mainPackages) {
+            if (!(mainPackage instanceof String)) {
+                allPackages.add(mainPackage);
+                continue;
+            }
+            for (String subPackage : subPackages) {
+                allPackages.add(mainPackage + "." + subPackage);
+            }
+        }
 
         try {
             if (classLoader == null) {
