@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew test
 
       - name: Upload Nightly Build
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: success()
         with:
           name: skript-nightly
