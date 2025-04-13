@@ -58,7 +58,7 @@ public class Parser {
             scriptName = args[j];
             programArgs = Arrays.copyOfRange(args, j + 1, args.length);
         }
-        init(new String[0], new String[0], programArgs, true);
+        init(new String[0], new String[0], programArgs, true, null);
         run(scriptName, debug, tipsEnabled);
     }
 
