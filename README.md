@@ -26,9 +26,9 @@ The main aim is to provide a better, easier to understand and more flexible impl
 
 This repository currently contains two main branches :
 
- * **master** : this branch contains a proof-of-concept implementation of the parser, that compiles to an executable JAR file.
+ * **main** : this branch contains a proof-of-concept implementation of the parser, that compiles to an executable JAR file.
  * **skript-library** : this branch contains no implementations, and its purpose is to be used as a base library for any skript-parser-related projects.
 
 ## Contributing 
 
-External contributions are extremely welcome, as I (Syst3ms, owner of the repository) and other contributors don't have enough time to contribute to the repository regularly. Adding features is obviously amazing, but smaller things such as cleaning up the code and adding documentation can go a long way for the project. If you want to start contributing, simply clone the Git repository and start working from here. I recommend using IntelliJ IDEA, it's my IDE of choice, and some annotations are only properly understood and handled by it.
+External contributions are welcome

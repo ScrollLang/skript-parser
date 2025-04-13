@@ -3,7 +3,7 @@ name: Build, Test & Upload
 on:
   push:
     branches:
-      - master
+      - main
       - 'scroll/**'
       - 'parser/**'
   pull_request:
