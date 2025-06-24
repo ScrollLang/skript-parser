@@ -29,9 +29,9 @@ dependencies {
     shadow (group: 'com.google.code.gson', name: 'gson', version: '2.13.1')
 
     testRuntimeOnly (group: 'org.junit.vintage', name: 'junit-vintage-engine', version: '5.11.4')
-    testRuntimeOnly (group: 'org.junit.jupiter', name:'junit-jupiter-engine', version: '5.11.4')
+    testRuntimeOnly (group: 'org.junit.jupiter', name:'junit-jupiter-engine', version: '5.13.2')
 
-    testImplementation (group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.11.4')
+    testImplementation (group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.13.2')
     testImplementation (group: 'com.google.code.gson', name: 'gson', version: '2.13.1')
     testImplementation (group: 'junit', name: 'junit', version: '4.13.2')
 }
