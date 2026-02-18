@@ -22,7 +22,7 @@ test {
 
 dependencies {
     implementation (group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2')
-    implementation (group: 'org.jetbrains', name: 'annotations', version: '26.0.2-1')
+    implementation (group: 'org.jetbrains', name: 'annotations', version: '26.1.0')
 
     shadow testImplementation (group: 'org.reflections', name: 'reflections', version: '0.10.2')
     shadow testImplementation (group: 'org.javassist', name: 'javassist', version: '3.30.2-GA')
